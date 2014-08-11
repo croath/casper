@@ -2,6 +2,6 @@ class PushWorker
   include Sidekiq::Worker
 
   def perform(content, token)
-    puts "One push token : #{token}, content: #{content}"
+    APNSPush::ConnectionService.send_push(content, token)
   end
 end
