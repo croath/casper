@@ -32,6 +32,7 @@ class PushConnection
 
     t1 = Thread.new do
       begin
+        puts 'hoho'
         result = @ssl.read_nonblock(8)
         self.handle_error(result)
       rescue IO::WaitReadable

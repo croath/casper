@@ -41,3 +41,5 @@ gem 'spring',        group: :development
 gem 'sidekiq'
 gem 'sinatra', require: false
 gem 'slim'
+
+gem 'redis'

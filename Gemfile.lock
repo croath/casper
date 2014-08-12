@@ -140,6 +140,7 @@ DEPENDENCIES
   jbuilder (~> 2.0)
   jquery-rails
   rails (= 4.1.4)
+  redis
   sass-rails (~> 4.0.3)
   sdoc (~> 0.4.0)
   sidekiq
