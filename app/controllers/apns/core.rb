@@ -13,6 +13,8 @@ module APNSPush
   end
 end
 
+require 'base64'
+
 class PushConnection
   include APNSPush
   include Singleton
@@ -32,7 +34,6 @@ class PushConnection
 
     t1 = Thread.new do
       begin
-        puts 'hoho'
         result = @ssl.read_nonblock(8)
         self.handle_error(result)
       rescue IO::WaitReadable
@@ -61,36 +62,39 @@ class PushConnection
     puts "host: " + @host
   end
 
-  def send_push(content, token)
+  def send_push(push_array)
     puts 'send start'
-    @ssl.write(self.push_data(content, token))
+    @ssl.write(self.push_data(push_array))
     puts 'send success'
   end
 
   def handle_error(err)
     err.strip!
     command, status, identifier = err.unpack('CCA*')
-    puts "!!!ERROR!!! cmd = #{command} status = #{status} id = #{identifier}"
+    puts "!!!ERROR!!! cmd = #{command} status = #{status} id = #{Base64.encode64(identifier)}"
+    retry_array = PushNotification.get_all_after_id(Base64.encode64(identifier))
+
     self.disconnect
     self.connect
+
+    self.send_push(retry_array)
   end
 
-  def push_data(content, token)
-    pt = [token.gsub(/[\s|<|>]/,'')].pack('H*')
-    pm = content
-    pi = OpenSSL::Random.random_bytes(4)
-    pe = 0
-    pr = 10
-
-    data = ''
-    data << [1, 32, pt].pack("CnA*")
-    data << [2, pm.bytesize, pm].pack("CnA*")
-    data << [3, 4, pi].pack("CnA*")
-    data << [4, 4, pe].pack("CnN")
-    data << [5, 1, pr].pack("CnC")
+  def push_data(push_array)
 
     bytes = ''
-    bytes << ([2, data.bytesize].pack('CN') + data)
+
+    for p in push_array
+      puts p.json_dump
+      data = ''
+      data << [1, 32, [p.token].pack('H*')].pack("CnA*")
+      data << [2, p.json_ready_for_push.bytesize, p.json_ready_for_push].pack("CnA*")
+      data << [3, 4, p.binary_id].pack("CnA*")
+      data << [4, 4, p.expiration].pack("CnN")
+      data << [5, 1, p.priority].pack("CnC")
+
+      bytes << ([2, data.bytesize].pack('CN') + data)
+    end
     bytes
   end
 end
@@ -110,6 +114,9 @@ class ConnectionService
   @@conn.connect
 
   def self.send_push(content, token)
-    @@conn.send_push(content, token)
+    p = PushNotification.new_with_infos(token, content, 0, nil)
+    p.save_to_store
+
+    @@conn.send_push([p])
   end
 end
