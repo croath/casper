@@ -56,7 +56,7 @@ class PushNotification
 
   def self.get_all_after_id(identifier)
     timestamp = $redis.zscore("ids:q0", identifier).to_i
-    all_ids = $redis.zrangebyscore("ids:q0", "(#{timestamp}", "+inf")
+    all_ids = $redis.zrangebyscore("ids:q0", "(#{timestamp}", "(#{(Time.now.to_f*10000).to_i}")
 
     id_list = Array.new
     for one_id in all_ids
