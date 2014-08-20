@@ -48,34 +48,4 @@ class PushNotification
     json_hash = {:aps => {:alert => @content, :badge => @badge}, :property => @property}
     json_hash.to_json
   end
-
-  # def self.get_from_store(identifier)
-  #   json = $redis.get("notification:q0:#{identifier}")
-  #   PushNotificaion.new_with_json(json)
-  # end
-  #
-  # def self.get_all_after_id(identifier)
-  #   timestamp = $redis.zscore("ids:q0", identifier).to_i
-  #   all_ids = $redis.zrangebyscore("ids:q0", "(#{timestamp}", "(#{(Time.now.to_f*10000).to_i}")
-  #
-  #   id_list = Array.new
-  #   for one_id in all_ids
-  #     new_id = "notification:q0:#{one_id}"
-  #     id_list.push(new_id)
-  #   end
-  #   json_list = $redis.mget(id_list)
-  #
-  #   obj_list = Array.new
-  #   for json in json_list
-  #     obj_list.push(PushNotification.new_with_json(JSON.parse(json)))
-  #   end
-  #
-  #   obj_list
-  # end
-  #
-  # def save_to_store
-  #   $redis.zadd("ids:q0", (Time.now.to_f*10000).to_i, @identifier)
-  #   $redis.set("notification:q0:#{@identifier}", self.json_dump)
-  # end
-
 end

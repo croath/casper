@@ -166,8 +166,8 @@ class ConnectionService
     @@conns[Random.rand(@@pool_count-1)]
   end
 
-  def self.internal_push(content, token)
-    p = PushNotification.new_with_infos(token, content, 0, nil)
+  def self.internal_push(alert, token, badge, params)
+    p = PushNotification.new_with_infos(token, alert, badge, params)
     conn = self.random_connection
     conn.save_to_store(p)
     conn.send_push([p])
@@ -179,7 +179,7 @@ class ConnectionService
     @@conns << conn
   end
 
-  def self.send_push(content, token)
-    self.internal_push(content, token)
+  def self.send_push(alert, token, badge, params)
+    self.internal_push(alert, token, badge, params)
   end
 end
