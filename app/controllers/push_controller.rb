@@ -18,6 +18,8 @@ class PushController < ApplicationController
       PushWorker.perform_async(alert, token, badge, properties)
     end
 
+    @count = 1
+
     respond_to do |format|
       format.json
     end
