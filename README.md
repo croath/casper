@@ -33,7 +33,7 @@ Then just start rails by:
 
 You can connect to Casper either TCP/UDP socket or simple HTTP request.
 
-###TCP/UDP socket sample:
+###TCP socket sample:
 
 `telnet 127.0.0.1 9092`
 
