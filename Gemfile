@@ -43,3 +43,5 @@ gem 'sinatra', require: false
 gem 'slim'
 
 gem 'redis'
+
+gem 'thin'
