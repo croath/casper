@@ -82,7 +82,13 @@ class PushConnection
 
   def send_push(push_array)
     puts 'send start'
-    @ssl.write(self.push_data(push_array))
+    begin
+      @ssl.write(self.push_data(push_array))
+    rescue
+      self.disconnect
+      self.connect
+      @ssl.write(self.push_data(push_array))
+    end
     puts 'send success'
   end
 
