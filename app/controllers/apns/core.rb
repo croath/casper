@@ -19,6 +19,7 @@ module APNSPush
 end
 
 require 'base64'
+require 'thread'
 
 class PushConnection
   include APNSPush
@@ -36,8 +37,6 @@ class PushConnection
       context.cert = OpenSSL::X509::Certificate.new(File.read(@production_cert))
       context.key  = OpenSSL::PKey::RSA.new(File.read(@production_cert), @production_pass)
     end
-
-    @sock = nil
 
     if @sandbox
       @sock        = TCPSocket.new(@sandbox_host, @sandbox_port)
@@ -75,16 +74,27 @@ class PushConnection
 
   def initialize(identifier, sandbox = true)
     super()
+
+    @semaphore = Mutex.new
     @connection_id = identifier
     @sandbox = sandbox
   end
 
   def send_push(push_array)
     puts 'send start'
-    begin
-      @ssl.write_nonblock(self.push_data(push_array))
-    rescue
-    end
+    @semaphore.synchronize {
+      begin
+        @ssl.write(self.push_data(push_array))
+      rescue IO::WaitReadable
+        IO.select([@ssl])
+        retry
+      rescue IO::WaitWritable, Errno::EINTR
+        IO.select(nil, [@ssl])
+        retry
+      rescue => err
+        puts err
+      end
+    }
     puts 'send success'
   end
 
@@ -103,8 +113,10 @@ class PushConnection
 
     retry_array = self.get_all_after_id(Base64.encode64(identifier))
 
-    self.disconnect
-    self.connect
+    @semaphore.synchronize {
+      # self.disconnect
+      self.connect
+    }
 
     self.send_push(retry_array)
   end

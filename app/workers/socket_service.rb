@@ -9,7 +9,8 @@ class SocketService
       begin
         @server = TCPServer.new 9092
         puts 'tcp start 9092'
-      rescue
+      rescue => err
+        puts err
       end
     end
   end
