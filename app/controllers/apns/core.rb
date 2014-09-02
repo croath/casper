@@ -66,8 +66,8 @@ class PushConnection
   end
 
   def disconnect
-    @ssl.close
     @sock.close
+    @ssl.close
   end
 
   def self.instance
@@ -83,11 +83,11 @@ class PushConnection
   def send_push(push_array)
     puts 'send start'
     begin
-      @ssl.write(self.push_data(push_array))
+      @ssl.write_nonblock(self.push_data(push_array))
     rescue
       self.disconnect
       self.connect
-      @ssl.write(self.push_data(push_array))
+      retry
     end
     puts 'send success'
   end

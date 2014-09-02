@@ -7,7 +7,7 @@ class ConnectionService
   # end
 
   def self.random_connection
-    @@conns[Random.rand(@@pool_count-1)]
+    @@conns[Random.rand(@@pool_count)]
   end
 
   def self.internal_push(alert, token, badge, params)
