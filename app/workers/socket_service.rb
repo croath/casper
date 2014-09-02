@@ -6,8 +6,11 @@ class SocketService
 
   def initialize
     if @server == nil
-      @server = TCPServer.new 9092
-      puts 'tcp start 9092'
+      begin
+        @server = TCPServer.new 9092
+        puts 'tcp start 9092'
+      rescue
+      end
     end
   end
 

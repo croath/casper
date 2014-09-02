@@ -66,7 +66,6 @@ class PushConnection
   end
 
   def disconnect
-    @sock.close
     @ssl.close
   end
 
@@ -85,9 +84,6 @@ class PushConnection
     begin
       @ssl.write_nonblock(self.push_data(push_array))
     rescue
-      self.disconnect
-      self.connect
-      retry
     end
     puts 'send success'
   end
@@ -95,7 +91,16 @@ class PushConnection
   def handle_error(err)
     err.strip!
     command, status, identifier = err.unpack('CCA*')
-    puts "!!!ERROR!!! cmd = #{command} status = #{status} id = #{Base64.encode64(identifier)}"
+    puts "!!!ERROR!!! cmddd = #{command} status = #{status} id = #{Base64.encode64(identifier)}"
+
+    puts "status = #{status} fuck"
+
+    if status.to_i == 8
+      puts Base64.encode64(identifier)
+      notification = self.get_from_store("#{Base64.encode64(identifier)}")
+      save_invalid(notification)
+    end
+
     retry_array = self.get_all_after_id(Base64.encode64(identifier))
 
     self.disconnect
@@ -109,15 +114,17 @@ class PushConnection
     bytes = ''
 
     for p in push_array
-      puts p.json_dump
-      data = ''
-      data << [1, 32, [p.token].pack('H*')].pack("CnA*")
-      data << [2, p.json_ready_for_push.bytesize, p.json_ready_for_push].pack("CnA*")
-      data << [3, 4, p.binary_id].pack("CnA*")
-      data << [4, 4, p.expiration].pack("CnN")
-      data << [5, 1, p.priority].pack("CnC")
+      if self.check_valid(p)
+        puts p.json_dump
+        data = ''
+        data << [1, 32, [p.token].pack('H*')].pack("CnA*")
+        data << [2, p.json_ready_for_push.bytesize, p.json_ready_for_push].pack("CnA*")
+        data << [3, 4, p.binary_id].pack("CnA*")
+        data << [4, 4, p.expiration].pack("CnN")
+        data << [5, 1, p.priority].pack("CnC")
 
-      bytes << ([2, data.bytesize].pack('CN') + data)
+        bytes << ([2, data.bytesize].pack('CN') + data)
+      end
     end
     bytes
   end
@@ -128,6 +135,18 @@ class PushConnection
 
   def redis_ids_prefix
     "ids:q#{@connection_id}"
+  end
+
+  def invalid_token_prefix
+    "inv:token"
+  end
+
+  def save_invalid(notification)
+    $redis.zadd(invalid_token_prefix, 1, notification.token)
+  end
+
+  def check_valid(notification)
+    $redis.zscore(invalid_token_prefix, notification.token) == nil
   end
 
   def save_to_store(notification)
@@ -156,6 +175,7 @@ class PushConnection
 
   def get_from_store(identifier)
     json = $redis.get("#{redis_noti_prefix}:#{identifier}")
-    PushNotificaion.new_with_json(json)
+    p = PushNotification.new_with_json(JSON.parse(json))
+    p
   end
 end
