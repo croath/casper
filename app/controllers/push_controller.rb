@@ -50,7 +50,7 @@ class PushController < ApplicationController
 
     respond_to do |format|
       if @error.count > 0
-        format.json { render template: 'push/send_push.json.jbuilder', status: 404 }
+        format.json { render template: 'push/send_push.json.jbuilder', status: 400 }
       else
         format.json { render template: 'push/send_push.json.jbuilder', status: 200 }
       end
