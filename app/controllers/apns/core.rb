@@ -83,16 +83,16 @@ class PushConnection
   def send_push(push_array)
     puts 'send start'
     @semaphore.synchronize {
+      tries = 0
       begin
         @ssl.write(self.push_data(push_array))
-      rescue IO::WaitReadable
-        IO.select([@ssl])
-        retry
-      rescue IO::WaitWritable, Errno::EINTR
-        IO.select(nil, [@ssl])
-        retry
       rescue => err
         puts err
+        self.connect
+        tries += 1
+        if tries <= 3
+          retry
+        end
       end
     }
     puts 'send success'
@@ -114,7 +114,6 @@ class PushConnection
     retry_array = self.get_all_after_id(Base64.encode64(identifier))
 
     @semaphore.synchronize {
-      # self.disconnect
       self.connect
     }
 
