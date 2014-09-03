@@ -76,6 +76,36 @@ parameters:
 "type": "iOS"
 ```
 
+###Params
+
+<table>
+<tr>
+	<td>push_token</td>
+	<td>推送设备 ID</td>
+	<td>固定长度 64 位字符</td>
+</tr>
+<tr>
+	<td>alert</td>
+	<td>系统通知中心显示的文字</td>
+	<td>50 个字符以下，可为空</td>
+</tr>
+<tr>
+	<td>badge</td>
+	<td>应用右上角显示的未读通知个数</td>
+	<td>[0, 99999]，整数</td>
+</tr>
+<tr>
+	<td>params</td>
+	<td>用于应用解析推送后产生动作的自协议 JSON</td>
+	<td>能进行 JSON 解析的字符串，200 字符以内</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>设备类型</td>
+	<td>目前仅支持 <strong>iOS</strong></td>
+</tr>
+</table>
+
 ## Contribute
 
 Find the code sucks? Send a pull request and a fuck you to me.
