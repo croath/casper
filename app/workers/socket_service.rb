@@ -40,8 +40,36 @@ class SocketService
           alert = noti_hash["alert"]
           token = noti_hash["push_token"]
           badge = noti_hash["badge"]
-          properties = JSON.parse(noti_hash["params"])
-          PushWorker.perform_async(alert, token, badge, properties)
+
+          @error = Array.new
+
+          if token.nil? || token.length != 64
+            @error << "incorrect token"
+          end
+
+          unless badge.is_i? && badge.to_i > 0 && badge.to_i <= 99999
+            @error << "incorrect badge"
+          end
+
+          if alert.length > 50
+            @error << "alert text too long"
+          end
+
+          properties = nil
+
+          begin
+            properties = JSON.parse(noti_hash["params"])
+          rescue
+            @error << "bad json"
+          end
+
+          if !properties.nil? && properties.length > 200
+            @error << "properties text too long"
+          end
+
+          unless @error.count > 0
+            PushWorker.perform_async(alert, token, badge, properties)
+          end
         end
       end
     rescue => error

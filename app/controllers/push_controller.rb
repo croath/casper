@@ -18,12 +18,11 @@ class PushController < ApplicationController
 
     type = params["type"]
     if type == "iOS"
+      @error = Array.new
+
       alert = params["alert"]
       token = params["push_token"]
       badge = params["badge"]
-      properties = JSON.parse(params["params"])
-
-      @error = Array.new
 
       if token.nil? || token.length != 64
         @error << "incorrect token"
@@ -37,7 +36,15 @@ class PushController < ApplicationController
         @error << "alert text too long"
       end
 
-      if properties.length > 200
+      properties = nil
+
+      begin
+        properties = JSON.parse(params["params"])
+      rescue
+        @error << "bad json"
+      end
+
+      if !properties.nil? && properties.length > 200
         @error << "properties text too long"
       end
 
